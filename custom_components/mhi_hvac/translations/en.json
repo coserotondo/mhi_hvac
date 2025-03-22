@@ -1,0 +1,230 @@
+{
+    "common": {
+        "error": {
+            "invalid_value": "Invalid value.",
+            "missing_preset": "Select a preset to edit/delete."
+        }
+    },
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configure MHI HVAC",
+                "description": "Please enter your device details for the MHI HVAC integration.",
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "model_id": "Model ID",
+                    "serial_number": "Serial Number"
+                }
+            }
+        },
+        "error": {
+            "invalid_host_format": "The host must be a valid IP address or hostname.",
+            "invalid_auth": "Authentication failed. Please check your credentials.",
+            "invalid_username_format": "The username can contain letters and numbers only.",
+            "invalid_serial_number_format": "The serial number cannot contain spaces."
+        },
+        "abort": {
+            "already_configured": "This host is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Options",
+                "description": "Current settings:\n{current_settings}",
+                "menu_options": {
+                    "general_settings": "General Settings",
+                    "hvac_modes_settings": "HVAC Modes",
+                    "preset_settings": "Presets",
+                    "group_settings": "Groups",
+                    "done": "Save and Finish"
+                }
+            },
+            "general_settings": {
+                "title": "General Settings",
+                "description": "Set the scan interval and temperature range.",
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)",
+                    "min_temp": "Minimum Temperature (°C)",
+                    "max_temp": "Maximum Temperature (°C)"
+                }
+            },
+            "hvac_modes_menu": {
+                "title": "HVAC Modes",
+                "description": "Valid HVAC modes:\n{hvac_modes}",
+                "data": {
+                    "action": "Actions:",
+                    "select_hvac_modes": "HVAC modes",
+                    "select_hvac_modes_active": "Active HVAC modes"
+                }
+            },
+            "presets_menu": {
+                "title": "Presets",
+                "description": "Presets:\n{presets}",
+                "data": {
+                    "action": "Actions:",
+                    "select_preset": "Preset"
+                }
+            },
+            "edit_hvac_modes": {
+                "title": "{edit_mode} HVAC modes",
+                "description": "Enter the HVAC modes details.",
+                "data": {
+                    "name": "HVAC modes name",
+                    "hvac_modes": "Valid HVAC Modes"
+                }
+            },
+            "edit_preset": {
+                "title": "{edit_mode} Preset",
+                "description": "Enter the preset details.",
+                "data": {
+                    "name": "Preset Name",
+                    "hvac_mode": "HVAC Mode to set",
+                    "hvac_modes": "Valid HVAC Modes",
+                    "onoff_mode": "HVAC On/Off",
+                    "temperature": "Preset Temperature (°C)",
+                    "fan_mode": "Fan Mode",
+                    "swing_mode": "Swing Mode"
+                }
+            },
+            "group_settings": {
+                "title": "Groups",
+                "description": "Available units:\n{available_units}\n\nConfigured groups:\n{configured_groups}",
+                "data": {
+                    "all_units_name": "Name for the All Units group"
+                },
+                "sections": {
+                    "group_no_130": {
+                        "name": "Group 130",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    },
+                    "group_no_131": {
+                        "name": "Group 131",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    },
+                    "group_no_132": {
+                        "name": "Group 132",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    },
+                    "group_no_133": {
+                        "name": "Group 133",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    },
+                    "group_no_134": {
+                        "name": "Group 134",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    },
+                    "group_no_135": {
+                        "name": "Group 135",
+                        "data": {
+                            "name": "Group Name (leave empty to disable)",
+                            "units": "Units (1,2,3,...)"
+                        }
+                    }
+                }
+            }
+        },
+        "error": {
+            "invalid_value": "Invalid value.",
+            "missing_preset": "Select a preset to edit/delete.",
+            "max_presets": "You have reached the maximum number of presets.",
+            "max_hvac_modes": "You have reached the maximum number of HVAC modes.",
+            "invalid_min_temp": "The minimum temperature must be less than the maximum temperature.",
+            "preset_name_exists": "A preset with this name already exists.",
+            "hvac_modes_name_exists": "A HVAC modes with this name already exists.",
+            "preset_name_invalid": "Invalid preset name.",
+            "hvac_modes_name_invalid": "Invalid HVAC modes name.",
+            "temperature_out_of_range": "The temperature must be between {min_temp} and {max_temp}.",
+            "invalid_group_config": "{output_message}",
+            "unit_group_nos_invalid": "The group numbers must be in the format of 1,2,3,4,..."
+        }
+    },
+    "entity": {
+        "climate": {
+            "mhi_hvac_climate": {
+                "state_attributes": {
+                    "group_no": {
+                        "name": "Group"
+                    },
+                    "all_real_unit_group_nos": {
+                        "name": "Units"
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "stop1": "Stop1",
+                            "stop2": "Stop2",
+                            "stop3": "Stop3",
+                            "stop4": "Stop4"
+                        }
+                    }
+                }
+            }
+        },
+        "binary_sensor": {
+            "mhi_hvac_rc_lock_binary_sensor": {
+                "state_attributes": {
+                    "group_no": {
+                        "name": "Group"
+                    },
+                    "all_real_unit_group_nos": {
+                        "name": "Units"
+                    },
+                    "rc_lock_extended": {
+                        "name": "Lock Status",
+                        "state": {
+                            "locked": "Locked",
+                            "locked_onoff": "On/Off",
+                            "locked_mode": "Mode",
+                            "locked_temp": "Temperature",
+                            "locked_onoff_mode": "On/Off + Mode",
+                            "locked_onoff_temp": "On/Off + Temperature",
+                            "locked_mode_temp": "Mode + Temperature",
+                            "unlocked": "Unlocked"
+                        }
+                    }
+                }
+            },
+            "mhi_hvac_filter_sign_binary_sensor": {
+                "state_attributes": {
+                    "group_no": {
+                        "name": "Group"
+                    },
+                    "all_real_unit_group_nos": {
+                        "name": "Units"
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "mhi_hvac_room_temperature_sensor": {
+                "state_attributes": {
+                    "group_no": {
+                        "name": "Group"
+                    },
+                    "all_real_unit_group_nos": {
+                        "name": "Units"
+                    }
+                }
+            }
+        }
+    }
+}
