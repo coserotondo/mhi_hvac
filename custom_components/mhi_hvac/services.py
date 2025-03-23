@@ -13,7 +13,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
-from .const import DOMAIN
+from .const import CONF_HVAC_MODE_ACTIVE, CONF_HVAC_MODES, DOMAIN
 from .pymhihvac.api import (
     ApiCallFailedException,
     LoginFailedException,
@@ -217,9 +217,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(f"Config entry {config_entry_id} not found")
         config_entry_name = config_entry.title
 
-        # valid_options = set(config_entry.options.get("hvac_modes", {}).keys())
+        # valid_options = set(config_entry.options.get(CONF_HVAC_MODES, {}).keys())
         valid_options = {
-            key.lower() for key in config_entry.options.get("hvac_modes", {})
+            key.lower() for key in config_entry.options.get(CONF_HVAC_MODES, {})
         }
         if not valid_options:
             raise ServiceValidationError("No HVAC modes configured")
@@ -229,12 +229,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 f"The HVAC modes '{new_active_mode}' is not configured"
             )
 
-        current_active_mode = config_entry.options.get("hvac_modes_active", "").lower()
+        current_active_mode = config_entry.options.get(
+            CONF_HVAC_MODE_ACTIVE, ""
+        ).lower()
 
         if new_active_mode != current_active_mode:
             # coordinator: MHIHVACDataUpdateCoordinator = config_entry
             current_options = dict(config_entry.options)
-            current_options["hvac_modes_active"] = new_active_mode.title()
+            current_options[CONF_HVAC_MODE_ACTIVE] = new_active_mode.title()
             hass.config_entries.async_update_entry(
                 config_entry, options=current_options
             )

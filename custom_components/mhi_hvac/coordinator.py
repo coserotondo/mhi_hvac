@@ -1,7 +1,7 @@
 """Provides the MHICoordinator class with integrated helper functions."""
 
 from datetime import timedelta
-import json
+from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -41,6 +41,9 @@ class MHIHVACDataUpdateCoordinator(DataUpdateCoordinator):
         host: str,
         username: str,
         password: str,
+        method: str,
+        include_index: list[str] | None,
+        include_groups: list[str] | None,
         model_id: str,
         serial_number: str,
         presets: dict,
@@ -65,6 +68,9 @@ class MHIHVACDataUpdateCoordinator(DataUpdateCoordinator):
         self.devices_data: list[
             MHIHVACDeviceData
         ] = []  # Now a single list for all devices (units and virtual groups)
+        self.method = method
+        self.include_index = include_index
+        self.include_groups = include_groups
         self.presets = presets
         self.hvac_modes_config = hvac_modes_config
         self.max_temp = max_temp
@@ -126,7 +132,11 @@ class MHIHVACDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint asynchronously."""
         try:
-            raw_data = await self.api_controller.async_update_data()
+            raw_data = await self.api_controller.async_update_data(
+                method=self.method,
+                include_index=self.include_index,
+                include_groups=self.include_groups,
+            )
             raw_data_list: list[dict[str, Any]] = (
                 raw_data if isinstance(raw_data, list) else []
             )
@@ -149,7 +159,7 @@ class MHIHVACDataUpdateCoordinator(DataUpdateCoordinator):
         except (
             ClientError,
             TimeoutError,
-            json.JSONDecodeError,
+            JSONDecodeError,
             ApiCallFailedException,
             LoginFailedException,
             NoSessionCookieException,

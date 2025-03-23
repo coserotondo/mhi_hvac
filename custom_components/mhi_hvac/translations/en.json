@@ -1,10 +1,4 @@
 {
-    "common": {
-        "error": {
-            "invalid_value": "Invalid value.",
-            "missing_preset": "Select a preset to edit/delete."
-        }
-    },
     "config": {
         "step": {
             "user": {
@@ -16,7 +10,20 @@
                     "username": "Username",
                     "password": "Password",
                     "model_id": "Model ID",
-                    "serial_number": "Serial Number"
+                    "serial_number": "Serial Number",
+                    "include_index": "Blocks to include (1,2,3,...)",
+                    "include_groups": "Units to include (1,2,3,...)"
+                }
+            },
+            "reconfigure": {
+                "title": "Reconfigure MHI HVAC",
+                "description": "Please enter your device details for the MHI HVAC integration.",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "include_index": "Blocks to include (1,2,3,...)",
+                    "include_groups": "Units to include (1,2,3,...)"
                 }
             }
         },
@@ -24,10 +31,13 @@
             "invalid_host_format": "The host must be a valid IP address or hostname.",
             "invalid_auth": "Authentication failed. Please check your credentials.",
             "invalid_username_format": "The username can contain letters and numbers only.",
-            "invalid_serial_number_format": "The serial number cannot contain spaces."
+            "invalid_serial_number_format": "The serial number cannot contain spaces.",
+            "invalid_blocks_format": "The blocks to include have to be in 1,2,3,... format.",
+            "invalid_units_format": "The units to include have to be in 1,2,3,... format."
         },
         "abort": {
-            "already_configured": "This host is already configured."
+            "already_configured": "This host is already configured.",
+            "reconfigure_successful": "Reconfigure Successfull."
         }
     },
     "options": {

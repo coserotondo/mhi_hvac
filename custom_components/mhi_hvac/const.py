@@ -1,7 +1,7 @@
 """Defines constants used in the MHI HVAC custom component."""
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.const import ATTR_SERIAL_NUMBER, Platform, UnitOfTemperature
 
 from .pymhihvac.const import MHIHVACMode
 
@@ -40,6 +40,16 @@ ALL_GROUPS = "All Groups"
 DEFAULT_SCAN_INTERVAL = 30
 
 TEMPERATURE_UNIT = UnitOfTemperature.CELSIUS
+CONF_SERIAL_NUMBER = ATTR_SERIAL_NUMBER
+CONF_METHOD = "method"
+CONF_INCLUDE_INDEX = "include_index"
+CONF_INCLUDE_GROUPS = "include_groups"
+CONF_PRESETS = "presets"
+CONF_HVAC_MODE_ACTIVE = "hvac_modes_active"
+CONF_HVAC_MODES = "hvac_modes"
+CONF_GROUPS = "groups"
+CONF_MAX_TEMP = "max_temp"
+CONF_MIN_TEMP = "min_temp"
 
 # DEFAULT_VIRTUAL_GROUPS = {
 #     "129": {

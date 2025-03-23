@@ -1,11 +1,11 @@
 """The MHI HVAC integration."""
 
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MODEL_ID,
     CONF_NAME,
@@ -17,7 +17,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
+from .const import (
+    CONF_GROUPS,
+    CONF_HVAC_MODE_ACTIVE,
+    CONF_HVAC_MODES,
+    CONF_INCLUDE_GROUPS,
+    CONF_INCLUDE_INDEX,
+    CONF_MAX_TEMP,
+    CONF_METHOD,
+    CONF_MIN_TEMP,
+    CONF_PRESETS,
+    CONF_SERIAL_NUMBER,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import MHIHVACDataUpdateCoordinator
 from .helpers import normalize_dict
 from .pymhihvac.api import (
@@ -32,71 +46,142 @@ from .utils import raise_config_entry_not_ready
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_entry_options(
-    config_entry: ConfigEntry,
-) -> tuple[dict, list | None, dict, float, float, timedelta]:
-    # presets
-    presets = config_entry.options.get("presets", {})
-    # hvac_modes_config
-    if hvac_modes_active := config_entry.options.get("hvac_modes_active", ""):
+@dataclass
+class Config:
+    """Configuration data for the MHI HVAC integration.
+
+    This data class stores the configuration settings for the integration.
+    It includes parameters for data retrieval, HVAC modes, presets, temperature limits, and update intervals.
+
+    Args:
+        method (str): The method used for retrieving data.
+        include_index (str | list[str] | None, optional): The indexes to include. Defaults to None.
+        include_groups (str | list[str] | None, optional): The groups to include. Defaults to None.
+        presets (dict, optional): A dictionary of preset configurations. Defaults to an empty dictionary.
+        hvac_modes_config (list | None, optional): A list of HVAC mode configurations. Defaults to None.
+        virtual_group_config (dict, optional): A dictionary of virtual group configurations. Defaults to an empty dictionary.
+        max_temp (float, optional): The maximum allowed temperature. Defaults to MAX_TEMP.
+        min_temp (float, optional): The minimum allowed temperature. Defaults to MIN_TEMP.
+        update_interval (timedelta, optional): The update interval. Defaults to timedelta(seconds=DEFAULT_SCAN_INTERVAL).
+
+    """
+
+    method: str
+    include_index: list[str] | None = None
+    include_groups: list[str] | None = None
+    presets: dict = field(default_factory=dict)
+    hvac_modes_config: list | None = None
+    virtual_group_config: dict = field(default_factory=dict)
+    max_temp: float = MAX_TEMP
+    min_temp: float = MIN_TEMP
+    update_interval: timedelta = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+
+
+def _get_config(config_entry: ConfigEntry) -> Config:
+    config_data = config_entry.data
+    config_options = config_entry.options
+
+    method = config_data.get(CONF_METHOD, "")
+    include_index = config_data.get(CONF_INCLUDE_INDEX, None)
+    include_groups = config_data.get(CONF_INCLUDE_GROUPS, None)
+
+    presets = config_options.get(CONF_PRESETS, {})
+
+    if hvac_modes_active := config_options.get(CONF_HVAC_MODE_ACTIVE, ""):
         hvac_modes_config = (
-            config_entry.options.get("hvac_modes", {})
+            config_options.get(CONF_HVAC_MODES, {})
             .get(hvac_modes_active, {})
-            .get("hvac_modes", [])
+            .get(CONF_HVAC_MODES, [])
         )
     else:
         hvac_modes_config = None
-    # virtual_group_config
-    virtual_group_config = config_entry.options.get("groups", {})
-    # max_temp, min_temp
-    max_temp = config_entry.options.get("max_temp", MAX_TEMP)
-    min_temp = config_entry.options.get("min_temp", MIN_TEMP)
-    # update_interval
+
+    virtual_group_config = config_options.get(CONF_GROUPS, {})
+    max_temp = config_options.get(CONF_MAX_TEMP, MAX_TEMP)
+    min_temp = config_options.get(CONF_MIN_TEMP, MIN_TEMP)
     update_interval = timedelta(
-        seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        seconds=config_options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
-    return (
-        presets,
-        hvac_modes_config,
-        virtual_group_config,
-        max_temp,
-        min_temp,
-        update_interval,
+
+    return Config(
+        method=method,
+        include_index=include_index,
+        include_groups=include_groups,
+        presets=presets,
+        hvac_modes_config=hvac_modes_config,
+        virtual_group_config=virtual_group_config,
+        max_temp=max_temp,
+        min_temp=min_temp,
+        update_interval=update_interval,
     )
+
+
+# def _get_config_entry_options(
+#     config_entry: ConfigEntry,
+# ) -> tuple[dict, list | None, dict, float, float, timedelta]:
+#     # presets
+#     presets = config_entry.options.get(CONF_PRESETS, {})
+#     # hvac_modes_config
+#     if hvac_modes_active := config_entry.options.get(CONF_HVAC_MODE_ACTIVE, ""):
+#         hvac_modes_config = (
+#             config_entry.options.get(CONF_HVAC_MODES, {})
+#             .get(hvac_modes_active, {})
+#             .get(CONF_HVAC_MODES, [])
+#         )
+#     else:
+#         hvac_modes_config = None
+#     # virtual_group_config
+#     virtual_group_config = config_entry.options.get(CONF_GROUPS, {})
+#     # max_temp, min_temp
+#     max_temp = config_entry.options.get(CONF_MAX_TEMP, MAX_TEMP)
+#     min_temp = config_entry.options.get(CONF_MIN_TEMP, MIN_TEMP)
+#     # update_interval
+#     update_interval = timedelta(
+#         seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+#     )
+#     return (
+#         presets,
+#         hvac_modes_config,
+#         virtual_group_config,
+#         max_temp,
+#         min_temp,
+#         update_interval,
+#     )
 
 
 async def async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     _LOGGER.debug("Updating entry %s", config_entry.entry_id)
     coordinator: MHIHVACDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    # get options
-    (
-        presets,
-        hvac_modes_config,
-        new_virtual_group_config,
-        max_temp,
-        min_temp,
-        new_update_interval,
-    ) = _get_config_entry_options(config_entry)
-    coordinator.presets = presets
-    coordinator.hvac_modes_config = hvac_modes_config
-    coordinator.max_temp = max_temp
-    coordinator.min_temp = min_temp
+    # # get options
+    # (
+    #     presets,
+    #     hvac_modes_config,
+    #     new_virtual_group_config,
+    #     max_temp,
+    #     min_temp,
+    #     new_update_interval,
+    # ) = _get_config_entry_options(config_entry)
+    config = _get_config(config_entry)
+    coordinator.presets = config.presets
+    coordinator.hvac_modes_config = config.hvac_modes_config
+    coordinator.max_temp = config.max_temp
+    coordinator.min_temp = config.min_temp
     old_virtual_group_config = coordinator.virtual_group_config
-    if new_update_interval != coordinator.update_interval:
-        coordinator.update_interval = new_update_interval
+    if config.update_interval != coordinator.update_interval:
+        coordinator.update_interval = config.update_interval
     await coordinator.async_request_refresh()  # Force data update
     # Proceed only if virtual groups changed
-    if normalize_dict(new_virtual_group_config) != normalize_dict(
+    if normalize_dict(config.virtual_group_config) != normalize_dict(
         old_virtual_group_config
     ):
         _LOGGER.debug(
             "Virtual groups changed for entry %s. Old: %s, New: %s",
             config_entry.entry_id,
             old_virtual_group_config,
-            new_virtual_group_config,
+            config.virtual_group_config,
         )
-        coordinator.virtual_group_config = new_virtual_group_config
+        coordinator.virtual_group_config = config.virtual_group_config
         # await coordinator.async_request_refresh()  # Force data update
         await hass.config_entries.async_reload(config_entry.entry_id)  # Reload entities
 
@@ -127,17 +212,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
     model_id = config_entry.data[CONF_MODEL_ID]
-    serial_number = config_entry.data[ATTR_SERIAL_NUMBER]
+    serial_number = config_entry.data[CONF_SERIAL_NUMBER]
 
-    (
-        presets,
-        hvac_modes_config,
-        virtual_group_config,
-        max_temp,
-        min_temp,
-        update_interval,
-    ) = _get_config_entry_options(config_entry)
-
+    # (
+    #     presets,
+    #     hvac_modes_config,
+    #     virtual_group_config,
+    #     max_temp,
+    #     min_temp,
+    #     update_interval,
+    # ) = _get_config_entry_options(config_entry)
+    config = _get_config(config_entry)
     coordinator = MHIHVACDataUpdateCoordinator(
         hass,
         logger=_LOGGER,
@@ -146,14 +231,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         host=host,
         username=username,
         password=password,
+        method=config.method,
+        include_index=config.include_index,
+        include_groups=config.include_groups,
         model_id=model_id,
         serial_number=serial_number,
-        presets=presets,
-        hvac_modes_config=hvac_modes_config,
-        virtual_group_config=virtual_group_config,
-        max_temp=max_temp,
-        min_temp=min_temp,
-        update_interval=update_interval,
+        presets=config.presets,
+        hvac_modes_config=config.hvac_modes_config,
+        virtual_group_config=config.virtual_group_config,
+        max_temp=config.max_temp,
+        min_temp=config.min_temp,
+        update_interval=config.update_interval,
     )
 
     try:

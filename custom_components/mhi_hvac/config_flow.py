@@ -7,17 +7,19 @@ from typing import Any
 from aiohttp import ClientError
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import slugify
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_INCLUDE_GROUPS,
+    CONF_INCLUDE_INDEX,
+    CONF_METHOD,
+    CONF_SERIAL_NUMBER,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from .options_flow import OptionsFlowHandler
 from .pymhihvac.api import (
     ApiCallFailedException,
@@ -27,13 +29,17 @@ from .pymhihvac.api import (
 from .pymhihvac.controller import MHIHVACSystemController
 from .pymhihvac.utils import async_resolve_hostname, format_exception
 from .schemas import (
+    BLOCKS_LIST_PATTERN,
     DATA_SCHEMA,
     HOSTNAME_PATTERN,
     IPV4_PATTERN,
-    RECONFIGURE_SCHEMA,
+    # RECONFIGURE_SCHEMA,
     SERIAL_NUMBER_PATTERN,
+    UNITS_LIST_PATTERN,
     USERNAME_PATTERN,
+    reconfigure_schema,
 )
+from .utils import split_if_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,13 +67,22 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not re.match(USERNAME_PATTERN, user_input[CONF_USERNAME]):
                 errors["base"] = "invalid_username_format"
             if not re.match(
-                SERIAL_NUMBER_PATTERN, user_input.get(ATTR_SERIAL_NUMBER, "")
+                SERIAL_NUMBER_PATTERN, user_input.get(CONF_SERIAL_NUMBER, "")
             ):
                 errors["base"] = "invalid_serial_number_format"
-
+            if include_index := user_input.get(CONF_INCLUDE_INDEX, ""):
+                if not re.match(BLOCKS_LIST_PATTERN, include_index):
+                    errors["base"] = "invalid_blocks_format"
+                else:
+                    user_input[CONF_INCLUDE_INDEX] = split_if_string(include_index)
+            if include_groups := user_input.get(CONF_INCLUDE_GROUPS, ""):
+                if not re.match(UNITS_LIST_PATTERN, CONF_INCLUDE_GROUPS):
+                    errors["base"] = "invalid_units_format"
+                else:
+                    user_input[CONF_INCLUDE_GROUPS] = split_if_string(include_groups)
             if not errors:
                 await self.async_set_unique_id(
-                    slugify(f"{DOMAIN} {user_input.get(ATTR_SERIAL_NUMBER)}")
+                    slugify(f"{DOMAIN} {user_input.get(CONF_SERIAL_NUMBER)}")
                 )
                 self._abort_if_unique_id_configured()
                 try:
@@ -103,21 +118,40 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle re-configure flow to update host, username, and password."""
+        """Handle re-configure flow.
+
+        Update host, username, password, method, included_index and included_groups.
+        """
         errors = {}
+        current_data = self._get_reconfigure_entry().data
+        current_values = {
+            CONF_HOST: current_data.get(CONF_HOST, ""),
+            CONF_USERNAME: current_data.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: current_data.get(CONF_PASSWORD, ""),
+            CONF_METHOD: current_data.get(CONF_METHOD, ""),
+            CONF_INCLUDE_INDEX: current_data.get(CONF_INCLUDE_INDEX, ""),
+            CONF_INCLUDE_GROUPS: current_data.get(CONF_INCLUDE_GROUPS, ""),
+        }
         if user_input is not None:
             ip_address = await async_resolve_hostname(user_input[CONF_HOST])
             _LOGGER.debug("Reauth: Host IP: %s", ip_address)
             if (
-                not (
-                    re.match(IPV4_PATTERN, user_input[CONF_HOST])
-                    or re.match(HOSTNAME_PATTERN, user_input[CONF_HOST])
-                )
-                or ip_address == "0.0.0.0"
-            ):
+                not re.match(IPV4_PATTERN, user_input[CONF_HOST])
+                and not re.match(HOSTNAME_PATTERN, user_input[CONF_HOST])
+            ) or ip_address == "0.0.0.0":
                 errors["base"] = "invalid_host_format"
             if not re.match(USERNAME_PATTERN, user_input[CONF_USERNAME]):
                 errors["base"] = "invalid_username_format"
+            if include_index := user_input.get(CONF_INCLUDE_INDEX, ""):
+                if not re.match(BLOCKS_LIST_PATTERN, include_index):
+                    errors["base"] = "invalid_blocks_format"
+                else:
+                    user_input[CONF_INCLUDE_INDEX] = split_if_string(include_index)
+            if include_groups := user_input.get(CONF_INCLUDE_GROUPS, ""):
+                if not re.match(UNITS_LIST_PATTERN, include_groups):
+                    errors["base"] = "invalid_units_format"
+                else:
+                    user_input[CONF_INCLUDE_GROUPS] = split_if_string(include_groups)
             if not errors:
                 try:
                     api_controller = MHIHVACSystemController(
@@ -146,6 +180,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_METHOD: user_input[CONF_METHOD],
+                    CONF_INCLUDE_INDEX: user_input.get(CONF_INCLUDE_INDEX, ""),
+                    CONF_INCLUDE_GROUPS: user_input.get(CONF_INCLUDE_GROUPS, ""),
                 }
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
@@ -154,7 +191,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=RECONFIGURE_SCHEMA,
+            data_schema=reconfigure_schema(current_values),
             errors=errors,
         )
 

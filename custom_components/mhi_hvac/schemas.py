@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MODEL_ID,
     CONF_NAME,
@@ -21,6 +20,11 @@ from homeassistant.helpers.selector import selector
 
 from .const import (
     ALL_UNITS_GROUP_NO,
+    CONF_HVAC_MODES,
+    CONF_INCLUDE_GROUPS,
+    CONF_INCLUDE_INDEX,
+    CONF_METHOD,
+    CONF_SERIAL_NUMBER,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -37,7 +41,9 @@ from .pymhihvac.const import (
     MHI_ONOFF_MODES,
     MHI_SWING_MODES,
     MIN_TEMP,
+    RAW_DATA_REQUEST_KEY_MAPPING,
 )
+from .utils import join_if_list
 
 # Regex patterns
 IPV4_PATTERN = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
@@ -46,6 +52,7 @@ USERNAME_PATTERN = r"(?i)^[a-z0-9]+$"
 SERIAL_NUMBER_PATTERN = r"^\S+$"
 PRESET_NAME_PATTERN = r"(?i)^[a-z0-9]+$"
 UNITS_LIST_PATTERN = r"^[1-9]\d*(?:,\s*[1-9]\d*)+$"
+BLOCKS_LIST_PATTERN = UNITS_LIST_PATTERN
 
 # Base schema for initial configuration.
 DATA_SCHEMA = vol.Schema(
@@ -55,7 +62,20 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_MODEL_ID): cv.string,
-        vol.Required(ATTR_SERIAL_NUMBER): cv.string,
+        vol.Required(CONF_SERIAL_NUMBER): cv.string,
+        vol.Required(CONF_METHOD): selector(
+            {
+                "select": {
+                    "options": [
+                        {"value": m, "label": m.capitalize()}
+                        for m in RAW_DATA_REQUEST_KEY_MAPPING
+                    ],
+                    "mode": "list",
+                }
+            }
+        ),
+        vol.Optional(CONF_INCLUDE_INDEX): cv.string,
+        vol.Optional(CONF_INCLUDE_GROUPS): cv.string,
     }
 )
 
@@ -157,6 +177,44 @@ SERVICE_SET_ACTIVE_HVAC_MODES_SCHEMA = vol.Schema(
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def reconfigure_schema(current_values: dict) -> vol.Schema:
+    """Return the schema for the reconfigure step menu form."""
+    include_index = join_if_list(current_values.get(CONF_INCLUDE_INDEX))
+    include_groups = join_if_list(current_values.get(CONF_INCLUDE_GROUPS))
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=current_values.get(CONF_HOST)): cv.string,
+            vol.Required(
+                CONF_USERNAME, default=current_values.get(CONF_USERNAME)
+            ): cv.string,
+            vol.Required(
+                CONF_PASSWORD, default=current_values.get(CONF_PASSWORD)
+            ): cv.string,
+            vol.Required(
+                CONF_METHOD, default=current_values.get(CONF_METHOD)
+            ): selector(
+                {
+                    "select": {
+                        "options": [
+                            {"value": m, "label": m.capitalize()}
+                            for m in RAW_DATA_REQUEST_KEY_MAPPING
+                        ],
+                        "mode": "list",
+                    }
+                }
+            ),
+            vol.Optional(
+                CONF_INCLUDE_INDEX,
+                description={"suggested_value": include_index},
+            ): cv.string,
+            vol.Optional(
+                CONF_INCLUDE_GROUPS,
+                description={"suggested_value": include_groups},
+            ): cv.string,
+        }
+    )
 
 
 def general_settings_schema(current: dict) -> vol.Schema:
@@ -282,8 +340,8 @@ def edit_hvac_modes_schema(current_values: dict) -> vol.Schema:
         {
             vol.Required("name", default=current_values.get("name")): cv.string,
             vol.Required(
-                "hvac_modes",
-                default=current_values.get("hvac_modes"),
+                CONF_HVAC_MODES,
+                default=current_values.get(CONF_HVAC_MODES),
             ): selector(
                 {
                     "select": {
@@ -396,10 +454,11 @@ def edit_group_schema(current_values: dict, num_groups: int) -> vol.Schema:
         group_no = str(ALL_UNITS_GROUP_NO + i)
         # Retrieve defaults from current_values:
         default_name = current_values.get(group_no, {}).get("name", "")
-        default_units = current_values.get(group_no, {}).get("units", "")
+        # default_units = current_values.get(group_no, {}).get("units", "")
+        default_units = join_if_list(current_values.get(group_no, {}).get("units", ""))
         # If default_units is a list, convert it to a string
-        if isinstance(default_units, list):
-            default_units = ", ".join(default_units)
+        # if isinstance(default_units, list):
+        #     default_units = ", ".join(default_units)
         group_schema = vol.Schema(
             {
                 vol.Optional(

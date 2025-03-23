@@ -13,6 +13,10 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 
 from .const import (
     ALL_UNITS_GROUP_NO,
+    CONF_GROUPS,
+    CONF_HVAC_MODE_ACTIVE,
+    CONF_HVAC_MODES,
+    CONF_PRESETS,
     DEFAULT_SCAN_INTERVAL,
     NUM_CONFIGURED_GROUPS,
     TEMPERATURE_UNIT,
@@ -52,14 +56,14 @@ class OptionsFlowHandler(OptionsFlow):
         self.editing_preset = None
         self.editing_hvac_modes = None
         # Ensure presets exists in options
-        if "hvac_modes" not in self.options:
-            self.options["hvac_modes"] = {}
-        if "hvac_modes_active" not in self.options:
-            self.options["hvac_modes_active"] = ""
-        if "presets" not in self.options:
-            self.options["presets"] = {}
-        if "groups" not in self.options:
-            self.options["groups"] = {}
+        if CONF_HVAC_MODES not in self.options:
+            self.options[CONF_HVAC_MODES] = {}
+        if CONF_HVAC_MODE_ACTIVE not in self.options:
+            self.options[CONF_HVAC_MODE_ACTIVE] = ""
+        if CONF_PRESETS not in self.options:
+            self.options[CONF_PRESETS] = {}
+        if CONF_GROUPS not in self.options:
+            self.options[CONF_GROUPS] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -96,10 +100,10 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Finalize the options flow and persist options to disk."""
-        hvac_modes = self.options.get("hvac_modes", {})
-        hvac_modes_active = self.options.get("hvac_modes_active", "")
-        presets = self.options.get("presets", {})
-        groups = self.options.get("groups", {})
+        hvac_modes = self.options.get(CONF_HVAC_MODES, {})
+        hvac_modes_active = self.options.get(CONF_HVAC_MODE_ACTIVE, "")
+        presets = self.options.get(CONF_PRESETS, {})
+        groups = self.options.get(CONF_GROUPS, {})
         min_temp = self.options.get(
             ATTR_MIN_TEMP, self.options.get(ATTR_MIN_TEMP, MIN_TEMP)
         )
@@ -108,17 +112,17 @@ class OptionsFlowHandler(OptionsFlow):
         )
         # Clamp preset temperatures using the helper.
         clamped_presets = clamp_presets(presets, min_temp, max_temp)
-        self.options["presets"] = clamped_presets
+        self.options[CONF_PRESETS] = clamped_presets
         final_options = {
             CONF_SCAN_INTERVAL: self.options.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             ),
             ATTR_MIN_TEMP: min_temp,
             ATTR_MAX_TEMP: max_temp,
-            "hvac_modes": hvac_modes,
-            "hvac_modes_active": hvac_modes_active,
-            "presets": clamped_presets,
-            "groups": groups,
+            CONF_HVAC_MODES: hvac_modes,
+            CONF_HVAC_MODE_ACTIVE: hvac_modes_active,
+            CONF_PRESETS: clamped_presets,
+            CONF_GROUPS: groups,
         }
         return self.async_create_entry(title="", data=final_options)
 
@@ -163,7 +167,7 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Preset management menu to add, edit, or delete presets."""
         errors = {}
-        presets = self.options.get("presets", {})
+        presets = self.options.get(CONF_PRESETS, {})
         schema = presets_menu_schema(presets)
 
         if user_input and "action" in user_input:
@@ -181,7 +185,7 @@ class OptionsFlowHandler(OptionsFlow):
                     return await self.async_step_edit_preset()
                 if "Delete" in user_input["action"]:
                     del presets[user_input["select_preset"]]
-                    self.options["presets"] = presets
+                    self.options[CONF_PRESETS] = presets
                     return await self.async_step_presets_menu()
             else:
                 errors["base"] = "missing_preset"
@@ -202,7 +206,7 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="presets_menu",
             data_schema=schema,
-            description_placeholders={"presets": description},
+            description_placeholders={CONF_PRESETS: description},
             errors=errors,
         )
 
@@ -211,8 +215,8 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """HVAC modes management menu to add, edit, or delete HVAC modes."""
         errors = {}
-        hvac_modes_active = self.options.get("hvac_modes_active", "")
-        hvac_modes = self.options.get("hvac_modes", {})
+        hvac_modes_active = self.options.get(CONF_HVAC_MODE_ACTIVE, "")
+        hvac_modes = self.options.get(CONF_HVAC_MODES, {})
         schema = hvac_modes_menu_schema(hvac_modes, hvac_modes_active)
 
         if user_input and "action" in user_input:
@@ -231,15 +235,15 @@ class OptionsFlowHandler(OptionsFlow):
                 if "Delete" in user_input["action"]:
                     del hvac_modes[user_input["select_hvac_modes"]]
                     if (
-                        self.options["hvac_modes_active"]
+                        self.options[CONF_HVAC_MODE_ACTIVE]
                         == user_input["select_hvac_modes"]
                     ):
-                        self.options["hvac_modes_active"] = ""
-                    self.options["hvac_modes"] = hvac_modes
+                        self.options[CONF_HVAC_MODE_ACTIVE] = ""
+                    self.options[CONF_HVAC_MODES] = hvac_modes
                     return await self.async_step_hvac_modes_menu()
             elif "select_hvac_modes_active" in user_input:
                 if "Set Active" in user_input["action"]:
-                    self.options["hvac_modes_active"] = user_input[
+                    self.options[CONF_HVAC_MODE_ACTIVE] = user_input[
                         "select_hvac_modes_active"
                     ]
                     return await self.async_step_init()
@@ -251,7 +255,7 @@ class OptionsFlowHandler(OptionsFlow):
         else:
             description_lines = []
             for key in sorted(hvac_modes.keys()):
-                if modes := hvac_modes[key].get("hvac_modes", []):
+                if modes := hvac_modes[key].get(CONF_HVAC_MODES, []):
                     modes_titled = ", ".join(
                         mode.replace("_", " ").title() for mode in modes
                     )
@@ -263,7 +267,7 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="hvac_modes_menu",
             data_schema=schema,
-            description_placeholders={"hvac_modes": description},
+            description_placeholders={CONF_HVAC_MODES: description},
             errors=errors,
         )
 
@@ -272,12 +276,12 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Edit or create a preset."""
         errors = {}
-        hvac_modes = self.options.get("hvac_modes", {})
+        hvac_modes = self.options.get(CONF_HVAC_MODES, {})
         current_name = self.editing_hvac_modes or ""
         current_values = hvac_modes.get(
             current_name,
             {
-                "hvac_modes": [],
+                CONF_HVAC_MODES: [],
             },
         )
         current_values.setdefault("name", current_name)
@@ -295,9 +299,9 @@ class OptionsFlowHandler(OptionsFlow):
                 if current_name:
                     del hvac_modes[current_name]
                 hvac_modes[user_input["name"]] = {
-                    "hvac_modes": user_input["hvac_modes"],
+                    CONF_HVAC_MODES: user_input[CONF_HVAC_MODES],
                 }
-                self.options["hvac_modes"] = hvac_modes
+                self.options[CONF_HVAC_MODES] = hvac_modes
                 return await self.async_step_hvac_modes_menu()
 
             except vol.Invalid as e:
@@ -317,7 +321,7 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Edit or create a preset."""
         errors = {}
-        presets = self.options.get("presets", {})
+        presets = self.options.get(CONF_PRESETS, {})
         min_temp = self.options.get(ATTR_MIN_TEMP, MIN_TEMP)
         max_temp = self.options.get(ATTR_MAX_TEMP, MAX_TEMP)
         current_name = self.editing_preset or ""
@@ -353,7 +357,7 @@ class OptionsFlowHandler(OptionsFlow):
                     "fan_mode": user_input["fan_mode"],
                     "swing_mode": user_input["swing_mode"],
                 }
-                self.options["presets"] = presets
+                self.options[CONF_PRESETS] = presets
                 return await self.async_step_presets_menu()
 
             except vol.Invalid as e:
@@ -365,8 +369,6 @@ class OptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders={
                 "edit_mode": "Editing" if self.editing_preset else "New",
-                # "min_temp": min_temp,
-                # "max_temp": max_temp,
             },
         )
 
@@ -378,7 +380,7 @@ class OptionsFlowHandler(OptionsFlow):
         Allows the user to configure and manage groups of units.
         """
         errors = {}
-        groups = self.options.get("groups", {})
+        groups = self.options.get(CONF_GROUPS, {})
         group_nos = await get_climate_group_nos(self.hass, self.entry_id)
 
         # Helper to build groups from user input.
@@ -433,7 +435,7 @@ class OptionsFlowHandler(OptionsFlow):
                 else:
                     groups.pop(str(ALL_UNITS_GROUP_NO), None)
 
-                self.options["groups"] = groups
+                self.options[CONF_GROUPS] = groups
 
                 if not errors:
                     return await self.async_step_init()

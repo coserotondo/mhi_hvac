@@ -144,7 +144,7 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
 
     def _update_presets(self) -> None:
         """Update preset modes and supported features."""
-        # self._presets = self.coordinator.config_entry.options.get("presets", {})
+        # self._presets = self.coordinator.config_entry.options.get(CONF_PRESETS, {})
         self._presets = self.coordinator.presets
         if self._presets:
             self._attr_supported_features = (
@@ -252,7 +252,7 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
 
         hvac_mode = MHIHVACMode(preset.get("hvac_mode"))
         # self._preset_hvac_modes = [
-        #     HVACMode(mode) for mode in preset.get("hvac_modes", [])
+        #     HVACMode(mode) for mode in preset.get(CONF_HVAC_MODES, [])
         # ]  # TODO: verify
         onoff_mode_raw = preset.get("onoff_mode")
         onoff_mode = (
