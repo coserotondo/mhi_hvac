@@ -2,12 +2,12 @@
   "domain": "mhi_hvac",
   "name": "MHI HVAC",
   "config_flow": true,
-  "documentation": "https://github.com/yourusername/hass-mhi_hvac",
+  "documentation": "https://github.com/coserotondo/mhi_hvac",
   "iot_class": "local_polling",
   "integration_type": "device",
   "dependencies": [],
   "codeowners": [
-    "@yourusername"
+    "@coserotondo"
   ],
   "quality_scale": "custom",
   "requirements": [
