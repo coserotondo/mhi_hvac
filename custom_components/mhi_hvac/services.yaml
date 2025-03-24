@@ -33,9 +33,9 @@ set_device_property:
         select:
           options:
             - value: "on"
-              label: "On"
+              label: On
             - value: "off"
-              label: "Off"
+              label: Off
           mode: list
     target_temperature:
       description: "Specify the target temperature (within the device's allowed range)."
