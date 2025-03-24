@@ -1,9 +1,10 @@
 set_device_property:
   name: Set Device Properties
-  description: "Set the properties of a Mitsubishi HVAC device."
+  description: Set the properties of a Mitsubishi HVAC device.
   fields:
     climate_entity:
-      description: "Select the target climate entity."
+      name: Climate Entity
+      description: Select the target climate entity. If the selected climate entity is a group, the property/ies will be set to all the units of the group.
       required: true
       selector:
         entity:
@@ -12,7 +13,8 @@ set_device_property:
             domain: climate
           multiple: true
     hvac_mode:
-      description: "Set the HVAC mode."
+      name: HVAC Mode
+      description: Set the HVAC mode. The running state of the unit will not be changed unless specified in the On/Off mode.
       required: false
       selector:
         select:
@@ -27,7 +29,8 @@ set_device_property:
               label: Heat
           mode: dropdown
     onoff_mode:
-      description: "Set the on/off mode."
+      name: On/Off Mode
+      description: Set the on/off mode.
       required: false
       selector:
         select:
@@ -38,7 +41,8 @@ set_device_property:
               label: Off
           mode: list
     target_temperature:
-      description: "Specify the target temperature (within the device's allowed range)."
+      name: Target Temperature
+      description: Specify the target temperature (within the device's allowed range).
       required: false
       selector:
         number:
@@ -48,7 +52,8 @@ set_device_property:
           mode: box
           unit_of_measurement: "°C"
     fan_mode:
-      description: "Set the fan mode."
+      name: Fan Mode
+      description: Set the fan mode.
       required: false
       selector:
         select:
@@ -63,7 +68,8 @@ set_device_property:
               label: Diffuse
           mode: dropdown
     swing_mode:
-      description: "Set the swing mode."
+      name: Swing Mode
+      description: Set the swing mode.
       required: false
       selector:
         select:
@@ -80,12 +86,14 @@ set_device_property:
               label: Stop4
           mode: dropdown
     filter_reset:
-      description: "Reset the filter sign."
+      name: Reset Filter
+      description: Reset the filter signal to clean.
       required: false
       selector:
         boolean:
     lock_mode:
-      description: "Set the lock mode."
+      name: Lock Mode
+      description: Set the lock mode of the Remote Control.
       required: false
       selector:
         select:
@@ -110,16 +118,18 @@ set_device_property:
 
 set_active_hvac_modes:
   name: Set Active HVAC modes
-  description: "Set the active HVAC modes of a Mitsubishi HVAC device."
+  description: If the HVAC modes have been configured it will set the active (valid) HVAC modes.
   fields:
     config_entry_id:
-      description: "The Config Entry for the Mitsubishi HVAC device."
+      name: Device
+      description: The MHI HVAC device.
       required: true
       selector:
         config_entry:
           integration: mhi_hvac
     new_active_mode:
-      description: "The new HVAC modes for the Mitsubishi HVAC device."
+      name: New HVAC modes
+      description: The new HVAC modes for the MHI HVAC device.
       required: true
       selector:
         text:
