@@ -2,10 +2,10 @@
 
 from typing import Any
 
+from pymhihvac.utils import format_exception
+
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from .pymhihvac.utils import format_exception
 
 
 def raise_update_failed(message: str, e: Exception | None = None) -> None:

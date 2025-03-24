@@ -3,6 +3,18 @@
 import logging
 from typing import Any
 
+from pymhihvac.const import (
+    DEFAULT_FAN_MODE,
+    DEFAULT_SWING_MODE,
+    MAX_TEMP,
+    MHI_FAN_MODES,
+    MHI_HVAC_SET_MODES,
+    MHI_LOCK_MODES,
+    MHI_ONOFF_MODES,
+    MHI_SWING_MODES,
+    MIN_TEMP,
+    RAW_DATA_REQUEST_KEY_MAPPING,
+)
 import voluptuous as vol
 
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
@@ -30,18 +42,6 @@ from .const import (
     DOMAIN,
     MHI_HVAC_MODES,
     TEMPERATURE_UNIT,
-)
-from .pymhihvac.const import (
-    DEFAULT_FAN_MODE,
-    DEFAULT_SWING_MODE,
-    MAX_TEMP,
-    MHI_FAN_MODES,
-    MHI_HVAC_SET_MODES,
-    MHI_LOCK_MODES,
-    MHI_ONOFF_MODES,
-    MHI_SWING_MODES,
-    MIN_TEMP,
-    RAW_DATA_REQUEST_KEY_MAPPING,
 )
 from .utils import join_if_list
 

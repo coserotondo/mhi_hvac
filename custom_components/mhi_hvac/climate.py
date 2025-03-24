@@ -7,6 +7,15 @@ allowing control of HVAC units as climate entities within Home Assistant.
 import logging
 from typing import TYPE_CHECKING
 
+from pymhihvac.const import (
+    MHI_FAN_MODES,
+    MHI_SWING_MODES,
+    MHIFanMode,
+    MHIHVACMode,
+    MHIOnOffMode,
+    MHISwingMode,
+)
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -20,14 +29,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MHI_HVAC_MODES, TEMPERATURE_UNIT
 from .helpers import generate_friendy_name, generate_unique_id, get_translation_key
-from .pymhihvac.const import (
-    MHI_FAN_MODES,
-    MHI_SWING_MODES,
-    MHIFanMode,
-    MHIHVACMode,
-    MHIOnOffMode,
-    MHISwingMode,
-)
 from .utils import raise_config_entry_not_ready
 
 if TYPE_CHECKING:

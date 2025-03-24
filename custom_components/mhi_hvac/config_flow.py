@@ -5,6 +5,13 @@ import re
 from typing import Any
 
 from aiohttp import ClientError
+from pymhihvac.api import (
+    ApiCallFailedException,
+    LoginFailedException,
+    NoSessionCookieException,
+)
+from pymhihvac.controller import MHIHVACSystemController
+from pymhihvac.utils import async_resolve_hostname, format_exception
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -21,19 +28,11 @@ from .const import (
     DOMAIN,
 )
 from .options_flow import OptionsFlowHandler
-from .pymhihvac.api import (
-    ApiCallFailedException,
-    LoginFailedException,
-    NoSessionCookieException,
-)
-from .pymhihvac.controller import MHIHVACSystemController
-from .pymhihvac.utils import async_resolve_hostname, format_exception
 from .schemas import (
     BLOCKS_LIST_PATTERN,
     DATA_SCHEMA,
     HOSTNAME_PATTERN,
     IPV4_PATTERN,
-    # RECONFIGURE_SCHEMA,
     SERIAL_NUMBER_PATTERN,
     UNITS_LIST_PATTERN,
     USERNAME_PATTERN,

@@ -1,9 +1,9 @@
 """Defines constants used in the MHI HVAC custom component."""
 
+from pymhihvac.const import MHIHVACMode
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import ATTR_SERIAL_NUMBER, Platform, UnitOfTemperature
-
-from .pymhihvac.const import MHIHVACMode
 
 DOMAIN = "mhi_hvac"
 PLATFORMS = [
