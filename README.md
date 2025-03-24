@@ -9,8 +9,8 @@ Home Assistant custom component for managing Mitsubishi Heavy Industries HVAC sy
 ### HACS
 Add this repo https://github.com/coserotondo/mhi_hvac to the HACS store and install from there.
 
-Local installation
-Copy both .py files to folder: config/custom_components/mhi_hvac
+### Local installation
+Copy both .py files to folder: ***config/custom_components/mhi_hvac***.
 
 ## Configuration
-All teh configuration is done with the Home Assistant Config flow.
+All the configuration is done through the UI.
