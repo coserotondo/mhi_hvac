@@ -116,52 +116,10 @@ def _get_config(config_entry: ConfigEntry) -> Config:
     )
 
 
-# def _get_config_entry_options(
-#     config_entry: ConfigEntry,
-# ) -> tuple[dict, list | None, dict, float, float, timedelta]:
-#     # presets
-#     presets = config_entry.options.get(CONF_PRESETS, {})
-#     # hvac_modes_config
-#     if hvac_modes_active := config_entry.options.get(CONF_HVAC_MODE_ACTIVE, ""):
-#         hvac_modes_config = (
-#             config_entry.options.get(CONF_HVAC_MODES, {})
-#             .get(hvac_modes_active, {})
-#             .get(CONF_HVAC_MODES, [])
-#         )
-#     else:
-#         hvac_modes_config = None
-#     # virtual_group_config
-#     virtual_group_config = config_entry.options.get(CONF_GROUPS, {})
-#     # max_temp, min_temp
-#     max_temp = config_entry.options.get(CONF_MAX_TEMP, MAX_TEMP)
-#     min_temp = config_entry.options.get(CONF_MIN_TEMP, MIN_TEMP)
-#     # update_interval
-#     update_interval = timedelta(
-#         seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-#     )
-#     return (
-#         presets,
-#         hvac_modes_config,
-#         virtual_group_config,
-#         max_temp,
-#         min_temp,
-#         update_interval,
-#     )
-
-
 async def async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     _LOGGER.debug("Updating entry %s", config_entry.entry_id)
     coordinator: MHIHVACDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    # # get options
-    # (
-    #     presets,
-    #     hvac_modes_config,
-    #     new_virtual_group_config,
-    #     max_temp,
-    #     min_temp,
-    #     new_update_interval,
-    # ) = _get_config_entry_options(config_entry)
     config = _get_config(config_entry)
     coordinator.presets = config.presets
     coordinator.hvac_modes_config = config.hvac_modes_config
@@ -192,17 +150,6 @@ async def async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
         )
 
 
-# async def async_setup(hass: HomeAssistant, config: dict):
-#     """Set up the MHI HVAC integration."""
-#     # hass.data.setdefault(DOMAIN, {})
-
-#     # # Register services if first entry
-#     # if len(hass.data[DOMAIN]) == 1:
-#     #     await async_setup_services(hass)
-
-#     return True
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up MHI HVAC from a config entry."""
 
@@ -213,15 +160,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     password = config_entry.data[CONF_PASSWORD]
     model_id = config_entry.data[CONF_MODEL_ID]
     serial_number = config_entry.data[CONF_SERIAL_NUMBER]
-
-    # (
-    #     presets,
-    #     hvac_modes_config,
-    #     virtual_group_config,
-    #     max_temp,
-    #     min_temp,
-    #     update_interval,
-    # ) = _get_config_entry_options(config_entry)
     config = _get_config(config_entry)
     coordinator = MHIHVACDataUpdateCoordinator(
         hass,

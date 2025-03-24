@@ -11,9 +11,7 @@
   ],
   "quality_scale": "custom",
   "requirements": [
-    "aiohttp",
-    "async_timeout",
-    "voluptuous"
+    "pymhihvac"
   ],
   "version": "0.1.0"
 }

@@ -76,7 +76,6 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
     _attr_available: bool = False
     _attr_temperature_unit: str = TEMPERATURE_UNIT
     _attr_precision: float = PRECISION_HALVES
-    # _attr_supported_features = SUPPORTED_FEATURES
     _attr_has_entity_name: bool = True
     _enable_turn_on_off_backwards_compatibility: bool = False  # For deprecated features
 
@@ -144,7 +143,6 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
 
     def _update_presets(self) -> None:
         """Update preset modes and supported features."""
-        # self._presets = self.coordinator.config_entry.options.get(CONF_PRESETS, {})
         self._presets = self.coordinator.presets
         if self._presets:
             self._attr_supported_features = (
@@ -194,11 +192,9 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-
         # Optimistically update the local state
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
-
         # Perform the actual API call in the background
         await self.coordinator.async_set_device_property(
             "set_temperature", self.device_data, temperature
@@ -206,24 +202,30 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new HVAC Mode."""
+        # Optimistically update the local state
         self._attr_hvac_mode = HVACMode(hvac_mode)
         self.async_write_ha_state()
+        # Perform the actual API call in the background
         await self.coordinator.async_set_device_property(
             "set_hvac_mode", self.device_data, MHIHVACMode(hvac_mode)
         )
 
     async def async_set_fan_mode(self, fan_mode) -> None:
         """Set new fan mode."""
+        # Optimistically update the local state
         self._attr_fan_mode = MHIFanMode(fan_mode)
         self.async_write_ha_state()
+        # Perform the actual API call in the background
         await self.coordinator.async_set_device_property(
             "set_fan_mode", self.device_data, MHIFanMode(fan_mode)
         )
 
     async def async_set_swing_mode(self, swing_mode) -> None:
         """Set new swing mode."""
+        # Optimistically update the local state
         self._attr_swing_mode = MHISwingMode(swing_mode)
         self.async_write_ha_state()
+        # Perform the actual API call in the background
         await self.coordinator.async_set_device_property(
             "set_swing_mode", self.device_data, MHISwingMode(swing_mode)
         )
@@ -244,6 +246,7 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
         """Set new target preset mode."""
         if preset_mode is None:
             return
+        # Optimistically update the local state
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
         preset_mode_title = preset_mode.title()
@@ -251,9 +254,6 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
         preset = self._presets.get(preset_mode_title, {})
 
         hvac_mode = MHIHVACMode(preset.get("hvac_mode"))
-        # self._preset_hvac_modes = [
-        #     HVACMode(mode) for mode in preset.get(CONF_HVAC_MODES, [])
-        # ]  # TODO: verify
         onoff_mode_raw = preset.get("onoff_mode")
         onoff_mode = (
             MHIOnOffMode(onoff_mode_raw) if onoff_mode_raw is not None else None
@@ -261,12 +261,11 @@ class MHIHVACClimateEntity(CoordinatorEntity, ClimateEntity):  # type: ignore[re
         fan_mode = MHIFanMode(preset.get("fan_mode"))
         swing_mode = MHISwingMode(preset.get("swing_mode"))
         target_temperature = preset.get("temperature")
-
         # Build the parameters list conditionally.
         params = [hvac_mode, fan_mode, swing_mode, target_temperature]
         if onoff_mode is not None:
             params.append(onoff_mode)
-
+        # Perform the actual API call in the background
         await self.coordinator.async_set_device_property(
             "set_preset_mode", self.device_data, *params
         )

@@ -23,8 +23,6 @@ from .pymhihvac.utils import InvalidTemperatureException, format_exception
 from .schemas import SERVICE_SET_ACTIVE_HVAC_MODES_SCHEMA, SERVICE_SET_PROPERTIES_SCHEMA
 
 if TYPE_CHECKING:
-    # from homeassistant.config_entries import ConfigEntry
-
     from .coordinator import MHIHVACDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +51,7 @@ def _build_set_properties_payload(data: dict) -> tuple[list[str], list[Any]]:
         for key, value in data.items()
         if key in allowed_keys and value is not None
     }:
-        _LOGGER.debug("Action payload: %s", payload)
+        _LOGGER.debug("Service payload: %s", payload)
         return list(payload.keys()), list(payload.values())
     raise ServiceValidationError("No valid parameters provided")
 

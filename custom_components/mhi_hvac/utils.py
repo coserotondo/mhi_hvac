@@ -54,6 +54,5 @@ def split_if_string(value) -> list[Any] | Any:
     """
 
     if isinstance(value, str):
-        # Splitting and filtering out any empty strings after stripping whitespace.
         return [part.strip() for part in value.split(",") if part.strip()]
     return value

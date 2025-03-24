@@ -79,14 +79,6 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
-RECONFIGURE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
-
 SERVICE_SET_PROPERTIES_SCHEMA = vol.Schema(
     {
         vol.Required("climate_entity"): selector(
@@ -217,13 +209,13 @@ def reconfigure_schema(current_values: dict) -> vol.Schema:
     )
 
 
-def general_settings_schema(current: dict) -> vol.Schema:
+def general_settings_schema(current_values: dict) -> vol.Schema:
     """Return the schema for general (core) settings."""
     return vol.Schema(
         {
             vol.Optional(
                 CONF_SCAN_INTERVAL,
-                default=current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                default=current_values.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ): selector(
                 {
                     "number": {
@@ -236,7 +228,7 @@ def general_settings_schema(current: dict) -> vol.Schema:
             ),
             vol.Optional(
                 ATTR_MIN_TEMP,
-                default=current.get(ATTR_MIN_TEMP, MIN_TEMP),
+                default=current_values.get(ATTR_MIN_TEMP, MIN_TEMP),
             ): selector(
                 {
                     "number": {
@@ -250,7 +242,7 @@ def general_settings_schema(current: dict) -> vol.Schema:
             ),
             vol.Optional(
                 ATTR_MAX_TEMP,
-                default=current.get(ATTR_MAX_TEMP, MAX_TEMP),
+                default=current_values.get(ATTR_MAX_TEMP, MAX_TEMP),
             ): selector(
                 {
                     "number": {
@@ -452,13 +444,8 @@ def edit_group_schema(current_values: dict, num_groups: int) -> vol.Schema:
     }
     for i in range(1, num_groups + 1):
         group_no = str(ALL_UNITS_GROUP_NO + i)
-        # Retrieve defaults from current_values:
         default_name = current_values.get(group_no, {}).get("name", "")
-        # default_units = current_values.get(group_no, {}).get("units", "")
         default_units = join_if_list(current_values.get(group_no, {}).get("units", ""))
-        # If default_units is a list, convert it to a string
-        # if isinstance(default_units, list):
-        #     default_units = ", ".join(default_units)
         group_schema = vol.Schema(
             {
                 vol.Optional(
