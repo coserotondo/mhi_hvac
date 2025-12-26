@@ -4,6 +4,8 @@ Home Assistant custom component for managing Mitsubishi Heavy Industries HVAC sy
 ## Changelog
 ### 0.1.0
 - Initial release.
+### 0.1.1
+- Fix raw dataset filtering for invalid data.
 
 ## How to install:
 ### HACS
